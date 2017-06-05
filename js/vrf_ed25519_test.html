@@ -1,0 +1,48 @@
+<!-- Copyright 2017 Yahoo Inc. All rights reserved.
+ // 
+ // Licensed under the Apache License, Version 2.0 (the "License");
+ // you may not use this file except in compliance with the License.
+ // You may obtain a copy of the License at
+ //
+ //   http://www.apache.org/licenses/LICENSE-2.0
+ //
+ // Unless required by applicable law or agreed to in writing, software
+ // distributed under the License is distributed on an "AS IS" BASIS,
+ // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ // See the License for the specific language governing permissions and
+ // limitations under the License.
+ // -->
+<!DOCTYPE html>
+<html>
+<head>
+<title>Unit Test of vrf_ed25519</title>
+<!--script src="../../../../../../../javascript/closure/base.js"></script>
+<script src="test_js_deps-runfiles.js"></script>
+<script>
+  goog.require('e2e.coname.ClientTest');
+</script-->
+<!--script src="../../../../../../build/library/end-to-end.debug.js"></script-->
+<script src="../../../../../../build/library/end-to-end-ctx1.debug.js"></script>
+<script src="vrf_ed25519.js"></script>
+<script>
+//<![CDATA[
+function h2a(h) {
+	var a = [];
+	while (h.length >= 2) {
+		a.push(parseInt(h.substring(0, 2), 16));
+		h = h.substring(2, h.length);
+	}
+	return a;
+}
+var m = h2a("6d657373616765");
+var x = h2a("1fcce948db9fc312902d49745249cfd287de1a764fd48afb3cd0bdd0a8d74674885f642c8390293eb74d08cf38d3333771e9e319cfd12a21429eeff2eddeebd2");
+var pk = h2a("885f642c8390293eb74d08cf38d3333771e9e319cfd12a21429eeff2eddeebd2");
+var pi = h2a("033236f8991d15d073ff8754645f0a11071e3092227d85c243833d006b5cfe9dc0db619a43ab8588fc2c4d87b6c1a5ab390207f5df44e541c2ceb5e57085f347a04d852b90bdb2f2deba14c56c7bf81ca1");
+var v = h2a("3236f8991d15d073ff8754645f0a11071e3092227d85c243833d006b5cfe9dc0");
+
+console.log(e2e.coname.vrf.verify(pk, m, v, pi));
+
+//]]>
+</script>
+</head>
+</html>
