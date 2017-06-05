@@ -213,3 +213,59 @@ func TestECVRFOnce(t *testing.T) {
 	h := ECVRF_hash_to_curve(m, pk)
 	fmt.Printf("h: %s\n", hex.EncodeToString(ECP2OS(h)))
 }
+
+var (
+	fail1_0 int
+	fail1_1 int
+	fail2_0 int
+	fail2_1 int
+	succ1 int
+	succ2 int
+)
+
+func testOS2ECP(os []byte, sign byte) *ed1.ExtendedGroupElement {
+	P := new(ed1.ExtendedGroupElement)
+	var buf [32]byte
+	copy(buf[:], os)
+	buf[31] = (sign << 7) | (buf[31] & 0x7f)
+	if !P.FromBytes(&buf) {
+		// fmt.Printf("OS2ECP: malformed input: %v, sign = %d", os, sign)
+		if sign == 1 {
+			fail1_1++
+		} else {
+			fail1_0++
+		}
+		return nil
+	}
+	var t [32]byte
+	inf := GeScalarMult(P, IP2F(q))
+	inf.ToBytes(&t)
+	if t != [32]byte{1} {
+		// fmt.Printf("OS2ECP: not valid curve: sign = %d\n", sign)
+		if sign == 1 {
+			fail2_1++
+		} else {
+			fail2_0++
+		}
+		return nil
+	}
+	return P
+}
+
+func TestHashToCurve(t *testing.T) {
+	var h [32]byte
+	for i := 0; i < 1000; i++ {
+		io.ReadFull(rand.Reader, h[:])
+		if P := testOS2ECP(h[:], 0); P != nil {
+			succ1++
+			// fmt.Printf("success[%d]: sign = 0\n", i)
+			// return P
+		}
+		if P := testOS2ECP(h[:], 1); P != nil {
+			succ2++
+			// fmt.Printf("success[%d]: sign = 1\n", i)
+			// return P
+		}
+	}
+	fmt.Printf("fail1_0 = %d, fail1_1 = %d, fail2_0 = %d, fail2_1 = %d, succ1 = %d, succ2 = %d\n", fail1_0, fail1_1, fail2_0, fail2_1, succ1, succ2)
+}
