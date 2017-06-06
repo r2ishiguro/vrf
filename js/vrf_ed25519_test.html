@@ -16,13 +16,7 @@
 <html>
 <head>
 <title>Unit Test of vrf_ed25519</title>
-<!--script src="../../../../../../../javascript/closure/base.js"></script>
-<script src="test_js_deps-runfiles.js"></script>
-<script>
-  goog.require('e2e.coname.ClientTest');
-</script-->
-<!--script src="../../../../../../build/library/end-to-end.debug.js"></script-->
-<script src="../../../../../../build/library/end-to-end-ctx1.debug.js"></script>
+<script src="end-to-end-ctx1.debug.js"></script>
 <script src="vrf_ed25519.js"></script>
 <script>
 //<![CDATA[
@@ -37,8 +31,21 @@ function h2a(h) {
 var m = h2a("6d657373616765");
 var x = h2a("1fcce948db9fc312902d49745249cfd287de1a764fd48afb3cd0bdd0a8d74674885f642c8390293eb74d08cf38d3333771e9e319cfd12a21429eeff2eddeebd2");
 var pk = h2a("885f642c8390293eb74d08cf38d3333771e9e319cfd12a21429eeff2eddeebd2");
-var pi = h2a("033236f8991d15d073ff8754645f0a11071e3092227d85c243833d006b5cfe9dc0db619a43ab8588fc2c4d87b6c1a5ab390207f5df44e541c2ceb5e57085f347a04d852b90bdb2f2deba14c56c7bf81ca1");
-var v = h2a("3236f8991d15d073ff8754645f0a11071e3092227d85c243833d006b5cfe9dc0");
+var pi = h2a("037cb8261b7196c33a542e0341bd2a8463b6d49ff186371b310bc6413237491dac73589bb7cdbb40b5d5064e0c2787ea5f0e45d1ed1c8c6634aeab58159bdc236746d83e9504a4081ad6850d0cc2c06e04");
+var v = h2a("7cb8261b7196c33a542e0341bd2a8463b6d49ff186371b310bc6413237491dac");
+
+for (i = 0; i < 1000; i++) {
+	var r = [];
+	r.push((i >>> 24) & 0xff)
+	r.push((i >>> 16) & 0xff)
+	r.push((i >>> 8) & 0xff)
+	r.push(i & 0xff)
+	P = e2e.coname.vrf.hash_to_curve(r, pk)
+	if (!P.isOnCurve()) {
+	   console.log("not on curve", P)
+	   break
+	}
+}
 
 console.log(e2e.coname.vrf.verify(pk, m, v, pi));
 

@@ -19,17 +19,17 @@ goog.provide('e2e.coname.vrf');
 e2e.coname.vrf = (function() {
 	var N2 = 32;
 	var N = N2 / 2;
-	var limit = 1000;
+	var limit = 100;
+	var cofactor = 8;
 
 	var ed25519 = e2e.ecc.DomainParam.fromCurve(e2e.ecc.PrimeCurve.ED_25519);
 
 	function OS2ECP(os, sign) {
 		var b = os.slice();	// copy
-		b[31] = (sign << 7) | (b[31] & 0x7f);
+		if (sign !== undefined)
+			b[31] = (sign << 7) | (b[31] & 0x7f);
 		try {
-			var P = ed25519.curve.pointFromByteArray(b);
-			if (P.multiply(ed25519.n).isIdentity())
-				return P;
+			return ed25519.curve.pointFromByteArray(b);
 		} catch(e) {
 		}
 		return null;
@@ -74,10 +74,12 @@ e2e.coname.vrf = (function() {
 			h.update(ctr);
 			var digest = h.digest();
 			h.reset();
-			if (P = OS2ECP(digest, 0))
+			if (P = OS2ECP(digest)) {
+				// assume cofactor is 2^n
+				for (j = 1; j < cofactor; j *= 2)
+					P = P.add(P);
 				return P;
-			if (P = OS2ECP(digest, 1))
-				return P;
+			}
 		}
 		// should not reach here
 		throw new Error("couldn't make a point on curve")
@@ -116,6 +118,11 @@ e2e.coname.vrf = (function() {
 			if (!(vrf.length == N2 && proof.length > N2 + 1 && vrf.every(function(v, i) {return v === proof[i + 1]})))
 				return false
 			return ECVRF_verify(pk, proof, m);
+		},
+
+		// for testing
+		hash_to_curve: function(m, pk) {
+			return ECVRF_hash_to_curve(m, pk)
 		}
 	};
 })();
