@@ -34,6 +34,7 @@ const (
 	N2 = 32		// ceil(log2(q) / 8)
 	N = N2/2
 	qs = "1000000000000000000000000000000014def9dea2f79cd65812631a5cf5d3ed"	// 2^252 + 27742317777372353535851937790883648493
+	cofactor = 8
 )
 
 var (
@@ -157,10 +158,14 @@ func ECVRF_hash_to_curve(m []byte, pk []byte) *edwards25519.ExtendedGroupElement
 		hash.Write(ctr)
 		h := hash.Sum(nil)
 		hash.Reset()
-		if P := OS2ECP(h, 0); P != nil {
-			return P
+		for j := 0; j < 256/8 - cofactor; j++ {
+			h[j] = 0
 		}
-		if P := OS2ECP(h, 1); P != nil {
+		if P := OS2ECP(h, 0); P != nil {
+			// assume cofactor is 2^n
+			for j := 1; j < cofactor; j *= 2 {
+				P = GeDouble(P)
+			}
 			return P
 		}
 	}
@@ -248,6 +253,17 @@ func GeScalarMult(h *edwards25519.ExtendedGroupElement, a *[32]byte) *edwards255
 	var t [32]byte
 	pg.ToBytes(&t)
 	r.FromBytes(&t)
+	return r
+}
+
+
+func GeDouble(p *edwards25519.ExtendedGroupElement) *edwards25519.ExtendedGroupElement {
+	var q edwards25519.ProjectiveGroupElement
+	p.ToProjective(&q)
+	var rc edwards25519.CompletedGroupElement
+	q.Double(&rc)
+	r := new(edwards25519.ExtendedGroupElement)
+	rc.ToExtended(r)
 	return r
 }
 

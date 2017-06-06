@@ -221,6 +221,7 @@ var (
 	fail2_1 int
 	succ1 int
 	succ2 int
+	succ3 int
 )
 
 func testOS2ECP(os []byte, sign byte) *ed1.ExtendedGroupElement {
@@ -256,6 +257,7 @@ func TestHashToCurve(t *testing.T) {
 	var h [32]byte
 	for i := 0; i < 1000; i++ {
 		io.ReadFull(rand.Reader, h[:])
+		// ver.0
 		if P := testOS2ECP(h[:], 0); P != nil {
 			succ1++
 			// fmt.Printf("success[%d]: sign = 0\n", i)
@@ -266,6 +268,18 @@ func TestHashToCurve(t *testing.T) {
 			// fmt.Printf("success[%d]: sign = 1\n", i)
 			// return P
 		}
+		// ver.2
+		for j := 0; j < 32 - cofactor; j++ {
+			h[j] = 0
+		}
+		if P := testOS2ECP(h[:], 0); P != nil {
+			succ3++
+			// assume cofactor is 2^n
+			for j := 1; j < cofactor; j *= 2 {
+				P = GeDouble(P)
+			}
+			// return P
+		}
 	}
-	fmt.Printf("fail1_0 = %d, fail1_1 = %d, fail2_0 = %d, fail2_1 = %d, succ1 = %d, succ2 = %d\n", fail1_0, fail1_1, fail2_0, fail2_1, succ1, succ2)
+	fmt.Printf("fail1_0 = %d, fail1_1 = %d, fail2_0 = %d, fail2_1 = %d, succ1 = %d, succ2 = %d, succ3 = %d\n", fail1_0, fail1_1, fail2_0, fail2_1, succ1, succ2, succ3)
 }
