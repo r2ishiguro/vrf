@@ -228,25 +228,15 @@ func testOS2ECP(os []byte, sign byte) *ed1.ExtendedGroupElement {
 	P := new(ed1.ExtendedGroupElement)
 	var buf [32]byte
 	copy(buf[:], os)
-	buf[31] = (sign << 7) | (buf[31] & 0x7f)
+	if sign < 2 {
+		buf[31] = (sign << 7) | (buf[31] & 0x7f)
+	}
 	if !P.FromBytes(&buf) {
 		// fmt.Printf("OS2ECP: malformed input: %v, sign = %d", os, sign)
 		if sign == 1 {
 			fail1_1++
 		} else {
 			fail1_0++
-		}
-		return nil
-	}
-	var t [32]byte
-	inf := GeScalarMult(P, IP2F(q))
-	inf.ToBytes(&t)
-	if t != [32]byte{1} {
-		// fmt.Printf("OS2ECP: not valid curve: sign = %d\n", sign)
-		if sign == 1 {
-			fail2_1++
-		} else {
-			fail2_0++
 		}
 		return nil
 	}
@@ -268,11 +258,11 @@ func TestHashToCurve(t *testing.T) {
 			// fmt.Printf("success[%d]: sign = 1\n", i)
 			// return P
 		}
-		// ver.2
+		// ver.1?
 		for j := 0; j < 32 - cofactor; j++ {
 			h[j] = 0
 		}
-		if P := testOS2ECP(h[:], 0); P != nil {
+		if P := testOS2ECP(h[:], 2); P != nil {
 			succ3++
 			// assume cofactor is 2^n
 			for j := 1; j < cofactor; j *= 2 {

@@ -180,6 +180,10 @@ func OS2ECP(os []byte, sign byte) *edwards25519.ExtendedGroupElement {
 	if !P.FromBytes(&buf) {
 		return nil
 	}
+	return P
+//
+// we no longer need to check order * P = infinity
+//
 	var t [32]byte
 	inf := GeScalarMult(P, IP2F(q))
 	inf.ToBytes(&t)
