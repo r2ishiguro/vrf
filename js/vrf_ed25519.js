@@ -76,7 +76,7 @@ e2e.coname.vrf = (function() {
 			h.reset();
 			if (P = OS2ECP(digest)) {
 				// assume cofactor is 2^n
-				for (j = 1; j < cofactor; j *= 2)
+				for (var j = 1; j < cofactor; j *= 2)
 					P = P.add(P);
 				return P;
 			}
