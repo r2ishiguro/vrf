@@ -239,27 +239,6 @@ func IP2F(b *big.Int) *[32]byte {
 	return r
 }
 
-func GeScalarMult(h *edwards25519.ExtendedGroupElement, a *[32]byte) *edwards25519.ExtendedGroupElement {
-	r := new(edwards25519.ExtendedGroupElement)
-	var pg edwards25519.ProjectiveGroupElement
-	edwards25519.GeDoubleScalarMultVartime(&pg, a, h, &[32]byte{})	// h^a * g^0
-	var t [32]byte
-	pg.ToBytes(&t)
-	r.FromBytes(&t)
-	return r
-}
-
-
-func GeDouble(p *edwards25519.ExtendedGroupElement) *edwards25519.ExtendedGroupElement {
-	var q edwards25519.ProjectiveGroupElement
-	p.ToProjective(&q)
-	var rc edwards25519.CompletedGroupElement
-	q.Double(&rc)
-	r := new(edwards25519.ExtendedGroupElement)
-	rc.ToExtended(r)
-	return r
-}
-
 func G() *edwards25519.ExtendedGroupElement {
 	g := new(edwards25519.ExtendedGroupElement)
 	var f edwards25519.FieldElement
@@ -322,4 +301,34 @@ func GeAdd(p, qe *edwards25519.ExtendedGroupElement) *edwards25519.ExtendedGroup
 	re := new(edwards25519.ExtendedGroupElement)
 	r.ToExtended(re)
 	return re
+}
+
+func GeDouble(p *edwards25519.ExtendedGroupElement) *edwards25519.ExtendedGroupElement {
+	var q edwards25519.ProjectiveGroupElement
+	p.ToProjective(&q)
+	var rc edwards25519.CompletedGroupElement
+	q.Double(&rc)
+	r := new(edwards25519.ExtendedGroupElement)
+	rc.ToExtended(r)
+	return r
+}
+
+func ExtendedGroupElementCMove(t, u *edwards25519.ExtendedGroupElement, b int32) {
+	edwards25519.FeCMove(&t.X, &u.X, b)
+	edwards25519.FeCMove(&t.Y, &u.Y, b)
+	edwards25519.FeCMove(&t.Z, &u.Z, b)
+	edwards25519.FeCMove(&t.T, &u.T, b)
+}
+
+func GeScalarMult(h *edwards25519.ExtendedGroupElement, a *[32]byte) *edwards25519.ExtendedGroupElement {
+	q := new(edwards25519.ExtendedGroupElement)
+	q.Zero()
+	p := h
+	for i := uint(0); i < 256; i++ {
+		bit := int32(a[i>>3]>>(i&7)) & 1
+		t := GeAdd(q, p)
+		ExtendedGroupElementCMove(q, t, bit)
+		p = GeDouble(p)
+	}
+	return q
 }

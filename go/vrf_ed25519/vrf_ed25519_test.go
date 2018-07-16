@@ -59,29 +59,29 @@ func TestGeScalarMult(t *testing.T) {
 func TestGeAdd(t *testing.T) {
 	var p1, p2 ed2.ProjectiveGroupElement
 	var h1, h2, c2 ed2.ExtendedGroupElement
-	var a1, a2, res1, res2, tmp [32]byte
+	var res1, res2, tmp [32]byte
 
 	io.ReadFull(rand.Reader, tmp[:])
 	c1 := ECVRF_hash_to_curve([]byte(message), tmp[:])
 
-	io.ReadFull(rand.Reader, a1[:])
-	io.ReadFull(rand.Reader, a2[:])
+	io.ReadFull(rand.Reader, tmp[:])
+	a1 := expandSecret(tmp[:])
+	io.ReadFull(rand.Reader, tmp[:])
+	a2 := expandSecret(tmp[:])
+	
 	c1.ToBytes(&tmp)
 	c2.FromBytes(&tmp)
-	ed2.GeDoubleScalarMultVartime(&p1, &a1, &c2, &[32]byte{})
-	ed2.GeDoubleScalarMultVartime(&p2, &a2, &c2, &[32]byte{})
+	ed2.GeDoubleScalarMultVartime(&p1, a1, &c2, &[32]byte{})
+	ed2.GeDoubleScalarMultVartime(&p2, a2, &c2, &[32]byte{})
 	p1.ToExtended(&h1)
 	p2.ToExtended(&h2)
 	ed2.GeAdd(&h1, &h1, &h2)
 	h1.ToBytes(&res1)
 
-	var v1, v2 ed1.ProjectiveGroupElement
-	ed1.GeDoubleScalarMultVartime(&v1, &a1, c1, &[32]byte{})
-	ed1.GeDoubleScalarMultVartime(&v2, &a2, c1, &[32]byte{})
-	h3 := GeAdd(GeScalarMult(c1, &a1), GeScalarMult(c1, &a2))
+	h3 := GeAdd(GeScalarMult(c1, a1), GeScalarMult(c1, a2))
 	h3.ToBytes(&res2)
 	if !bytes.Equal(res1[:], res2[:]) {
-		t.Error("GeAdd mismatch")
+		t.Errorf("GeAdd mismatch: %x, %x", a1[:], a2[:])
 	}
 }
 
